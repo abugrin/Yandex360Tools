@@ -20,5 +20,5 @@ CLIENT_SECRET=service_application secret
 
 - `listusers.py` - export all organization to .csv file. Required token scope: `directory:read_users` 
  - `downloader.py` - download all user files from Yandex Disk. Required access rights:
-`cloud_api:disk.app_folder, cloud_api:disk.read, cloud_api:disk.info,
-  yadisk:disk`. More info: https://yandex.ru/dev/api360/doc/ru/ref/ServiceApplicationsService/ServiceApplicationsService_Create.html
+`cloud_api:disk.app_folder, cloud_api:disk.read, cloud_api:disk.info, yadisk:disk`.
+More info: https://yandex.ru/dev/api360/doc/ru/ref/ServiceApplicationsService/ServiceApplicationsService_Create.html
