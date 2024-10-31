@@ -21,10 +21,13 @@ process = psutil.Process()
 directories: list[ResourceObject] = []
 
 log = logging.getLogger('Downloader')
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 log_handler = logging.StreamHandler(sys.stdout)
 log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
 log.addHandler(log_handler)
+
+sem = asyncio.Semaphore(10)
+
 
 async def main(email: str):
     start_time = time()
@@ -71,7 +74,7 @@ async def main(email: str):
         log.info(f'Found files to download: {files_count}')
         log.info('Downloading user files...')
 
-        sem = asyncio.Semaphore(5)
+
 
         for directory in directories:
             path = email + directory.path.removeprefix('disk:')
@@ -79,33 +82,36 @@ async def main(email: str):
             Path(path).mkdir(parents=True, exist_ok=True)
 
         file_position = 1
+        tasks = []
         for file in files:
 
             # log.debug(directory.path)
             file_position_str = f'[{file_position}/{files_count}]'
             file_position += 1
-            await download_file(
-                client=client,
-                path=file.path.removeprefix('disk:'),
-                email=email,
-                file_position_of=file_position_str,
-                sem=sem
-            )
 
+            tasks.append(asyncio.create_task(
+                    safe_download(
+                        client=client,
+                        path=file.path.removeprefix('disk:'),
+                        email=email,
+                        file_position_of=file_position_str
+                    )
+                )
+            )
+        await asyncio.gather(*tasks)
         end_time = time()
         log.info(f'Downloaded {len(files)} files in {round((end_time - start_time) / 60, 2)} minutes')
         log.debug(f'Used memory {round(process.memory_info().rss / 1024 ** 2, 2)} MB')
 
-async def download_file(client, path, email, file_position_of, sem):
-    try:
-        async with sem:  # Don't start next download until 10 other currently running
-            log.debug(f'Downloading file {file_position_of}: {path}')
-            await client.download(path, f'{email}{path}')
+async def download_file(client, path, email, file_position_of):
+    # log.info(f'Downloading file {file_position_of}: {path}')
+    await client.download(path, f'{email}{path}')
+    log.info(f'Downloaded file {file_position_of}: {path}')
 
-    finally:
-        # log.debug(f"Complete download: {path}")
-        pass
 
+async def safe_download(*args, **kwargs):
+    async with sem:  # semaphore limits num of simultaneous downloads
+        return await download_file(*args, **kwargs)
 
 async def process_directories(client, directories_list):
     if len(directories_list) > 0:
