@@ -50,9 +50,9 @@ async def main(email: str):
     async with client:
 
         if await client.check_token():
-            log.info(f'Test service app token: Success')
+            log.info('Test service app token: Success')
         else:
-            log.error(f'Test service app token: Failed')
+            log.error('Test service app token: Failed')
             exit(1)
 
         disk_info: DiskInfoObject = await client.get_disk_info()
