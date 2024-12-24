@@ -62,7 +62,7 @@ class API360:
         return User.from_dict(response_json)
 
 
-    async def count_pages(self)-> (int, int):
+    async def count_pages(self)-> tuple[int, int]:
         """Get number of pages in users list response"""
 
         self._logger.debug(f"Counting users pages for organization: {self._org_id}")
