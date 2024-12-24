@@ -20,7 +20,7 @@ def logger() -> Logger:
     log_logger = logging.getLogger('Deleter')
     log_logger.setLevel(logging.DEBUG)
     log_handler = logging.StreamHandler(sys.stdout)
-    log_file_handler = logging.FileHandler('downloader.log', encoding='utf8')
+    log_file_handler = logging.FileHandler('files_delete.log', encoding='utf8')
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
     log_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
     log_logger.addHandler(log_handler)
@@ -31,7 +31,7 @@ log = logger()
 
 def arg_parser() -> ArgumentParser:
     parser = ArgumentParser(
-        description=dedent(f"""
+        description=dedent("""
         Скрипт удаляет все файлы пользователей из Диска.
         Параметры:
         --users <file.csv> - файл со списком пользователей. По умолчанию будет использован users.csv

@@ -4,7 +4,7 @@ Add .env file with content:
 
 ```
 TOKEN=yandex_360_api_token
-ORG_ID=organizaton_id
+ORG_ID=organization_id
 CLIENT_ID=service_application_client_id
 CLIENT_SECRET=service_application secret
 ```
@@ -24,6 +24,9 @@ CLIENT_SECRET=service_application secret
 to Recycle Bin. Add `--permanent` parameter to delete data permanently. Provide .csv file with users ID
 and Email in `--users` parameter
 in the same format as `listusers.py` generates. Required access rights:`cloud_api:disk.app_folder, cloud_api:disk.read, cloud_api:disk.info, yadisk:disk`.
+- `imap_deleter.py` - delete all user emails. Provide .csv file with users ID and Email in `--users` parameter
+in the same format as `listusers.py` generates. Required access rights:`mail:imap_full, mail:imap_ro`.
+
 
 More info: https://yandex.ru/dev/api360/doc/ru/ref/ServiceApplicationsService/ServiceApplicationsService_Create.html
  
