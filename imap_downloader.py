@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from logging import Logger
 from textwrap import dedent
 from typing import List, Dict
+from pathlib import Path
 from imapclient import IMAPClient
 
 
@@ -21,7 +22,7 @@ def logger() -> Logger:
     log_logger = logging.getLogger('IMAP')
     log_logger.setLevel(logging.DEBUG)
     log_handler = logging.StreamHandler(sys.stdout)
-    log_file_handler = logging.FileHandler('imap_delete.log', encoding='utf8')
+    log_file_handler = logging.FileHandler('imap_download.log', encoding='utf8')
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
     log_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
     log_logger.addHandler(log_handler)
@@ -33,7 +34,7 @@ log = logger()
 def arg_parser() -> ArgumentParser:
     parser = ArgumentParser(
         description=dedent("""
-        Скрипт УДАЛЯЕТ все письма пользователей из Почты.
+        Скрипт скачивает все письма пользователей из Почты в формате EML.
         Параметры:
         --users <file.csv> - файл со списком пользователей. По умолчанию будет использован users.csv
         """),
@@ -58,7 +59,7 @@ def read_users_csv(file_path: str) -> List[Dict]:
         exit(1)
 
 
-async def delete_user_mail(token: str, email: str):
+async def download_user_mail(token: str, email: str):
     ttl_emails = 0
     with IMAPClient('imap.yandex.ru', ssl=True) as client:
         client.oauth2_login(email, token)
@@ -66,15 +67,23 @@ async def delete_user_mail(token: str, email: str):
         folders = client.list_folders()
 
         for folder in folders:
-            _, _, name = folder
+            delimiter: bytes
+            name: str
+            _, delimiter, name = folder
+
+            path = email + "/" + name.replace(delimiter.decode(), '/')
+            log.debug(f'Creating directory: {path}')
+            Path(path).mkdir(parents=True, exist_ok=True)
 
             client.select_folder(name)
             messages = client.search(criteria='ALL')
-            deleted = client.delete_messages(messages)
-            ttl_emails += len(deleted)
+            response = client.fetch(messages, ['RFC822'])
 
-        log.debug("IMAP expunge")
-        client.expunge()
+            for msgid, data in response.items():
+                with open(Path(path + "/" + str(msgid) + ".eml"), 'wb') as f:
+                    f.write(data[b'RFC822'])
+                ttl_emails += 1
+
         log.debug("IPAM connection logout")
         client.logout()
 
@@ -103,14 +112,14 @@ async def main():
     users = read_users_csv(args.users)
     print(f'Загружено пользователей: {len(users)}')
 
-    confirm = input('Вы уверены что хотите УДАЛИТЬ письма? (y/n)')
+    confirm = input('Вы уверены что хотите загрузить письма? (y/n)')
 
     if confirm == 'y':
         for user in users:
-            log.debug(f"*** Старт удаления писем для: {user.get('Email')}")
+            log.debug(f"*** Старт загрузки писем для: {user.get('Email')}")
             token = await get_service_token(api=api360, user_id=user.get('ID'))
-            emails_processed = await delete_user_mail(token=token, email=user.get('Email'))
-            log.debug(f"*** Удалено {emails_processed} писем для: {user.get('Email')}")
+            emails_processed = await download_user_mail(token=token, email=user.get('Email'))
+            log.debug(f"*** Загружено {emails_processed} писем для: {user.get('Email')}")
     else:
         exit(0)
 
