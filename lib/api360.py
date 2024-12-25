@@ -76,7 +76,7 @@ class API360:
         return users_count, pages_count
 
     async def get_users_page(self, page) -> UsersPage:
-        path = f'{self.__url}{self._org_id}/users??page={page}&perPage={self.__per_page}'
+        path = f'{self.__url}{self._org_id}/users?page={page}&perPage={self.__per_page}'
         response_json = await self._send_request(path, self._headers)
         return UsersPage.from_dict(response_json)
 
