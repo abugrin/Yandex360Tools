@@ -26,7 +26,8 @@ and Email in `--users` parameter
 in the same format as `listusers.py` generates. Required access rights:`cloud_api:disk.app_folder, cloud_api:disk.read, cloud_api:disk.info, yadisk:disk`.
 - `imap_deleter.py` - delete all user emails. Provide .csv file with users ID and Email in `--users` parameter
 in the same format as `listusers.py` generates. Required access rights:`mail:imap_full, mail:imap_ro`.
-
+- `caldav_deleter.py` - delete all user calendars. Provide .csv file with users ID and Email in `--users` parameter
+in the same format as `listusers.py` generates. Required access rights:`calendar:all`.
 
 More info: https://yandex.ru/dev/api360/doc/ru/ref/ServiceApplicationsService/ServiceApplicationsService_Create.html
  

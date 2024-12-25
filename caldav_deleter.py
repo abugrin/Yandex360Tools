@@ -104,7 +104,7 @@ async def main():
             log.debug(f"*** Старт удаления календарей для: {user.get('Email')}")
             token = await get_service_token(api=api360, user_id=user.get('ID'))
             calendars_processed = await delete_user_calendar(token=token, email=user.get('Email'))
-            log.debug(f"*** Удалено {calendars_processed} писем для: {user.get('Email')}")
+            log.debug(f"*** Удалено {calendars_processed} календарей для: {user.get('Email')}")
     else:
         exit(0)
 
