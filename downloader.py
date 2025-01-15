@@ -31,15 +31,19 @@ sem = asyncio.Semaphore(10)
 
 async def main(email: str):
     start_time = time()
-    api = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.DEBUG)
+    # api = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.DEBUG)
     response = {}
     try:
-        response = await api.get_service_app_token(
+        response = API360.get_service_app_token(
             client_id=os.getenv('CLIENT_ID'),
             client_secret=os.getenv('CLIENT_SECRET'),
             subject_token=email,
             subject_token_type='urn:yandex:params:oauth:token-type:email'
         )
+        if 'error' in response:
+            raise Exception(f'{response["error"]}: {response["error_description"]}')
+            exit(1)
+
     except Exception as e:
         log.debug(f'Failed to get service app token: {e}')
         exit(1)

@@ -3,6 +3,7 @@ import logging
 import sys
 
 import aiohttp
+import requests
 
 from lib.types import User, UsersPage
 
@@ -15,7 +16,7 @@ class API360:
     def __init__(self, api_key: str, org_id: str, log_level=logging.INFO):
         self._api_key = api_key
         self._org_id = org_id
-        self._logger = logging.getLogger('api360')
+        # self._logger = logging.getLogger('api360')
         self._logger.setLevel(log_level)
         log_handler = logging.StreamHandler(sys.stdout)
         log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
@@ -80,7 +81,7 @@ class API360:
         response_json = await self._send_request(path, self._headers)
         return UsersPage.from_dict(response_json)
 
-    async def get_service_app_token(self, client_id, client_secret, subject_token, subject_token_type = 'urn:yandex:params:oauth:token-type:uid'):
+    async def get_service_app_token_async(self, client_id, client_secret, subject_token, subject_token_type = 'urn:yandex:params:oauth:token-type:uid'):
         path = 'https://oauth.yandex.ru/token'
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -98,3 +99,25 @@ class API360:
         except Exception as e:
             self._logger.error(f"Error while getting service app token: {e}")
             raise e
+
+    @staticmethod    
+    def get_service_app_token(client_id, client_secret, subject_token, subject_token_type = 'urn:yandex:params:oauth:token-type:uid'):
+        path, headers, data = API360._get_headers(client_id, client_secret, subject_token, subject_token_type)
+        response_json = requests.post(path, headers=headers, data=data).json()
+        return response_json
+
+    @staticmethod
+    def _get_headers(client_id, client_secret, subject_token, subject_token_type):
+        path = 'https://oauth.yandex.ru/token'
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        data = {
+            'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'subject_token': subject_token,
+            'subject_token_type': subject_token_type
+        }
+
+        return path, headers, data

@@ -76,7 +76,7 @@ async def get_service_token(api: API360, user_id: str) -> str:
     response = {}
     try:
         try:
-            response = await api.get_service_app_token(
+            response = await api.get_service_app_token_async(
                 client_id=os.getenv('CLIENT_ID'),
                 client_secret=os.getenv('CLIENT_SECRET'),
                 subject_token=user_id,
