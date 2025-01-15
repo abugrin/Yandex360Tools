@@ -1,4 +1,4 @@
-## Tools collection for Yandex 360 API
+## Tools collection for Yandex 360 API (Unofficial, use at your own risk)
 
 Add .env file with content:
 
@@ -28,6 +28,8 @@ in the same format as `listusers.py` generates. Required access rights:`cloud_ap
 in the same format as `listusers.py` generates. Required access rights:`mail:imap_full, mail:imap_ro`.
 - `caldav_deleter.py` - delete all user calendars. Provide .csv file with users ID and Email in `--users` parameter
 in the same format as `listusers.py` generates. Required access rights:`calendar:all`.
+- `imap_downloader.py` - download all user emails. Provide .csv file with users ID and Email in `--users` parameter
+in the same format as `listusers.py` generates. Required access rights:`mail:imap_full, mail:imap_ro`.
 
 More info: https://yandex.ru/dev/api360/doc/ru/ref/ServiceApplicationsService/ServiceApplicationsService_Create.html
  
