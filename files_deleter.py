@@ -72,11 +72,11 @@ async def delete_user_data(token: str, permanent: bool = False):
 
 
 
-async def get_service_token(api: API360, user_id: str) -> str:
+async def get_service_token(user_id: str) -> str:
     response = {}
     try:
         try:
-            response = await api.get_service_app_token_async(
+            response = await API360.get_service_app_token_async(
                 client_id=os.getenv('CLIENT_ID'),
                 client_secret=os.getenv('CLIENT_SECRET'),
                 subject_token=user_id,
@@ -91,7 +91,6 @@ async def get_service_token(api: API360, user_id: str) -> str:
         exit(1)
 
 async def main():
-    api360 = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.DEBUG)
     parser = arg_parser()
     args = parser.parse_args()
     users = read_users_csv(args.users)
@@ -105,7 +104,7 @@ async def main():
     if confirm == 'y':
         for user in users:
             log.debug(f"*** Старт удаления данных для: {user.get('Email')}")
-            token = await get_service_token(api=api360, user_id=user.get('ID'))
+            token = await get_service_token(user_id=user.get('ID'))
             await delete_user_data(token=token, permanent=permanent)
             log.debug(f"*** Завершено для: {user.get('Email')}")
     else:

@@ -74,11 +74,11 @@ async def delete_user_calendar(token: str, email: str):
                         
     return ttl_calendars
 
-async def get_service_token(api: API360, user_id: str) -> str:
+async def get_service_token(user_id: str) -> str:
     response = {}
 
     try:
-        response = await api.get_service_app_token_async(
+        response = await API360.get_service_app_token_async(
             client_id=os.getenv('CLIENT_ID'),
             client_secret=os.getenv('CLIENT_SECRET'),
             subject_token=user_id,
@@ -91,7 +91,6 @@ async def get_service_token(api: API360, user_id: str) -> str:
 
 
 async def main():
-    api360 = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.DEBUG)
     parser = arg_parser()
     args = parser.parse_args()
     users = read_users_csv(args.users)
@@ -102,7 +101,7 @@ async def main():
     if confirm == 'y':
         for user in users:
             log.debug(f"*** Старт удаления календарей для: {user.get('Email')}")
-            token = await get_service_token(api=api360, user_id=user.get('ID'))
+            token = await get_service_token(user_id=user.get('ID'))
             calendars_processed = await delete_user_calendar(token=token, email=user.get('Email'))
             log.debug(f"*** Удалено {calendars_processed} календарей для: {user.get('Email')}")
     else:

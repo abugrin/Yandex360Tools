@@ -31,7 +31,7 @@ sem = asyncio.Semaphore(10)
 
 async def main(email: str):
     start_time = time()
-    # api = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.DEBUG)
+
     response = {}
     try:
         response = API360.get_service_app_token(
