@@ -3,7 +3,9 @@ import asyncio
 import csv
 import logging
 import os
+from re import S, sub
 import sys
+import mailbox
 from argparse import ArgumentParser
 from logging import Logger
 from textwrap import dedent
@@ -66,22 +68,38 @@ async def download_user_mail(token: str, email: str):
         
         folders = client.list_folders()
 
+        path = email #+ "/" + name.replace(delimiter.decode(), '/')
+        log.debug(f'Creating directory: {path}')
+        Path(path).mkdir(parents=True, exist_ok=True)
+        
         for folder in folders:
             delimiter: bytes
             name: str
             _, delimiter, name = folder
 
-            path = email + "/" + name.replace(delimiter.decode(), '/')
-            log.debug(f'Creating directory: {path}')
-            Path(path).mkdir(parents=True, exist_ok=True)
+            local_path = path
+            file_name = name
+
+            subfolders = name.split(delimiter.decode())
+            print(subfolders)
+
+            if len(subfolders) > 1:
+                file_name = subfolders.pop(-1)
+                for subfolder in subfolders:
+                    local_path = os.path.join(local_path, subfolder)
+                print(f'Create folder: {local_path}')
+                Path(local_path).mkdir(parents=True, exist_ok=True)
 
             client.select_folder(name)
             messages = client.search(criteria='ALL')
             response = client.fetch(messages, ['RFC822'])
-
+            mbox = mailbox.mbox(f'{local_path}/{file_name}.mbox')
+            
             for msgid, data in response.items():
-                with open(Path(path + "/" + str(msgid) + ".eml"), 'wb') as f:
-                    f.write(data[b'RFC822'])
+                mbox.add(data[b'RFC822'])
+                # with open(Path(path + "/" + str(msgid) + ".eml"), 'wb') as f:
+                  #  f.write(data[b'RFC822'])
+                    
                 ttl_emails += 1
 
         log.debug("IPAM connection logout")
