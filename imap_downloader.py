@@ -68,7 +68,7 @@ async def download_user_mail(token: str, email: str):
         folders = client.list_folders()
 
         path = email #+ "/" + name.replace(delimiter.decode(), '/')
-        log.debug(f'Creating directory: {path}')
+        log.debug(f'Создание директории: {path}')
         Path(path).mkdir(parents=True, exist_ok=True)
         
         for folder in folders:
@@ -80,13 +80,13 @@ async def download_user_mail(token: str, email: str):
             file_name = name
 
             subfolders = name.split(delimiter.decode())
-            print(subfolders)
+            log.debug(f'Обработка папки: {subfolders}')
 
             if len(subfolders) > 1:
                 file_name = subfolders.pop(-1)
                 for subfolder in subfolders:
                     local_path = os.path.join(local_path, subfolder)
-                print(f'Create folder: {local_path}')
+                log.debug(f'Создание директории: {local_path}')
                 Path(local_path).mkdir(parents=True, exist_ok=True)
 
             client.select_folder(name)
@@ -101,7 +101,7 @@ async def download_user_mail(token: str, email: str):
                     
                 ttl_emails += 1
 
-        log.debug("IPAM connection logout")
+        log.debug("IMAP connection logout")
         client.logout()
 
     return ttl_emails
@@ -134,8 +134,13 @@ async def main():
         for user in users:
             log.debug(f"*** Старт загрузки писем для: {user.get('Email')}")
             token = await get_service_token(user_id=user.get('ID'))
-            emails_processed = await download_user_mail(token=token, email=user.get('Email'))
-            log.debug(f"*** Загружено {emails_processed} писем для: {user.get('Email')}")
+
+            try:
+                emails_processed = await download_user_mail(token=token, email=user.get('Email'))
+                log.debug(f"*** Загружено {emails_processed} писем для: {user.get('Email')}")
+            except Exception as e:
+                log.error(f"*** Ошибка загрузки писем пользователя: {user.get('Email')}")
+                log.error(e)
     else:
         exit(0)
 
