@@ -3,7 +3,6 @@ import asyncio
 import csv
 import logging
 import os
-from re import S, sub
 import sys
 import mailbox
 from argparse import ArgumentParser
