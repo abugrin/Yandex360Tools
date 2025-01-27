@@ -1,4 +1,3 @@
-from curses.ascii import US
 from enum import Enum
 import json
 from typing import List

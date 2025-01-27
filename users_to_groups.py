@@ -3,8 +3,6 @@ import csv
 import logging
 import os
 
-from click import group
-from psutil import users
 
 from lib.types import User
 
