@@ -44,7 +44,7 @@ class API360:
                     if response.status == 200:
                         return await response.json()
                     else:
-                        raise Exception(f"Request failed with status {response.status}")
+                        raise Exception(f"Request failed with status {response.status} - {response}")
             else:
                 if body:
                     async with session.post(url=path, headers=headers, json=body) as response:

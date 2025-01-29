@@ -39,7 +39,7 @@ def arg_parser() -> ArgumentParser:
         """),
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('--users', type=str, default='users.csv', help='Файл со списком пользователей')
+    parser.add_argument('--users', type=str, required=True, help='CSV файл со списком пользователей')
     parser.add_argument('--permanent', action='store_true', help='Удалить данные безвозвратно')
     return parser
 

@@ -39,10 +39,10 @@ def read_users_to_groups_csv(file_path: str) -> list[dict]:
 
 def main():
     org_users = api.get_all_users()
-    print(f'- Loaded users from Organization: {len(org_users)}')
+    print(f'- Загружено пользователей организации: {len(org_users)}')
 
     users_to_groups = read_users_to_groups_csv('users_to_groups.csv')
-    print(f'- Loaded users to groups CSV: {len(users_to_groups)}')
+    print(f'- Загружено пользователей из CSV: {len(users_to_groups)}')
 
     for user_to_group in users_to_groups:
         user_email = user_to_group.get('Email')
@@ -53,17 +53,17 @@ def main():
             try:
                 res = api.add_user_to_group(user.uid, int(group_id))
                 if res.get('added'):
-                    print(f'-- {user_email} SUCCESSFULLY added to group {group_id}')
+                    print(f'-- {user_email} добавлен в группу {group_id}')
                 else:
-                    print(f'-- {user_email} NOT added to group {group_id}')
+                    print(f'-- {user_email} НЕ добавлен в группу {group_id}')
             except Exception as e:
-                print(f'-- {user_email} ERROR adding user to group {group_id}: {e}')
+                print(f'-- {user_email} ОШИБКА при добавлении пользователя в группу {group_id}: {e}')
 
 
 if __name__ == '__main__':
-    print('- Starting users to groups import')
+    print('- Старт импорта пользователей в группы')
     main()
-    print('- Finished users to groups import')
+    print('- Завершен импорт пользователей в группы')
 
 
     exit(0)
