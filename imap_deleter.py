@@ -1,6 +1,5 @@
 import argparse
 import csv
-from email import message
 import logging
 import os
 import sys
