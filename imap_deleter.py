@@ -1,6 +1,6 @@
 import argparse
-import asyncio
 import csv
+from email import message
 import logging
 import os
 import sys
@@ -58,8 +58,10 @@ def read_users_csv(file_path: str) -> List[Dict]:
         exit(1)
 
 
-async def delete_user_mail(token: str, email: str):
+def delete_user_mail(token: str, email: str):
     ttl_emails = 0
+    chunk_size = 1000
+
     with IMAPClient('imap.yandex.ru', ssl=True) as client:
         client.oauth2_login(email, token)
         
@@ -67,11 +69,18 @@ async def delete_user_mail(token: str, email: str):
 
         for folder in folders:
             _, _, name = folder
-
+            
             client.select_folder(name)
             messages = client.search(criteria='ALL')
-            deleted = client.delete_messages(messages)
-            ttl_emails += len(deleted)
+            log.debug(f"Обработка папки: {name} - Количество сообщений: {len(messages)}")
+
+            messages_split = list(split_list_into_chunks(messages, chunk_size))
+            
+            for i, messages_chunk in enumerate(messages_split):
+                #print(f"Chunk {i + 1}: {messages_chunk}")
+                deleted = client.delete_messages(messages_chunk)
+                ttl_emails += len(deleted)
+
 
         log.debug("IMAP expunge")
         client.expunge()
@@ -80,11 +89,17 @@ async def delete_user_mail(token: str, email: str):
 
     return ttl_emails
 
-async def get_service_token(user_id: str) -> str:
+def split_list_into_chunks(lst, chunk_size):
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]
+
+
+
+def get_service_token(user_id: str) -> str:
     response = {}
 
     try:
-        response = await API360.get_service_app_token_async(
+        response = API360.get_service_app_token(
             client_id=os.getenv('CLIENT_ID'),
             client_secret=os.getenv('CLIENT_SECRET'),
             subject_token=user_id,
@@ -96,7 +111,7 @@ async def get_service_token(user_id: str) -> str:
     return response['access_token']
 
 
-async def main():
+def main():
     parser = arg_parser()
     args = parser.parse_args()
     users = read_users_csv(args.users)
@@ -107,12 +122,12 @@ async def main():
     if confirm == 'y':
         for user in users:
             log.debug(f"*** Старт удаления писем для: {user.get('Email')}")
-            token = await get_service_token(user_id=user.get('ID'))
-            emails_processed = await delete_user_mail(token=token, email=user.get('Email'))
+            token = get_service_token(user_id=user.get('ID'))
+            emails_processed = delete_user_mail(token=token, email=user.get('Email'))
             log.debug(f"*** Удалено {emails_processed} писем для: {user.get('Email')}")
     else:
         exit(0)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
