@@ -1,4 +1,7 @@
+import csv
+import logging
 import os
+import sys
 from lib.api360 import API360
 
 def get_service_app_token(email: str) -> str:
@@ -12,4 +15,28 @@ def get_service_app_token(email: str) -> str:
         raise Exception(f'{response["error"]}: {response["error_description"]}')
 
     return(response['access_token'])
-    
+
+def logger(logger_name: str, file_name: str) -> logging.Logger:
+    log_logger = logging.getLogger(logger_name)
+    log_logger.setLevel(logging.DEBUG)
+    log_handler = logging.StreamHandler(sys.stdout)
+    log_file_handler = logging.FileHandler(file_name, encoding='utf8')
+    log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
+    log_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
+    log_logger.addHandler(log_handler)
+    log_logger.addHandler(log_file_handler)
+    return log_logger
+
+def read_users_csv(file_path: str) -> list[dict]:
+    users:list[dict] = []
+    try:
+        with open(file_path, 'r', encoding='utf8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                user_id = row.get('ID')
+                if user_id and len(user_id) == 16:
+                    users.append(row)
+        return users
+    except FileNotFoundError:
+        print(f'Файл {file_path} не найден')
+        exit(1)
