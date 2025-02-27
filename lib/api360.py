@@ -4,7 +4,7 @@ import sys
 from time import sleep
 
 import aiohttp
-import requests
+import httpx
 
 from lib.types import GroupMemberType, GroupMembers2, GroupsPage, User, UsersPage
 
@@ -158,7 +158,8 @@ class API360:
     @staticmethod    
     def get_service_app_token(client_id, client_secret, subject_token, subject_token_type = 'urn:yandex:params:oauth:token-type:uid'):
         path, headers, data = API360._get_headers(client_id, client_secret, subject_token, subject_token_type)
-        response_json = requests.post(path, headers=headers, data=data).json()
+        
+        response_json = httpx.post(path, headers=headers, data=data).json()
         return response_json
 
     @staticmethod
