@@ -44,20 +44,20 @@ class API360:
                     if response.status == 200:
                         return await response.json()
                     else:
-                        raise Exception(f"Request failed with status {response.status} - {response}")
+                        raise Exception(f"Request failed with status {response.status} - {response} - {response.content}")
             else:
                 if body:
                     async with session.post(url=path, headers=headers, json=body) as response:
                         if response.status == 200:
                             return await response.json()
                         else:
-                            raise Exception(f"Request failed with status {response.status}")
+                            raise Exception(f"Request failed with status {response.status} - {response}")
                 elif data:
                     async with session.post(url=path, headers=headers, data=data) as response:
                         if response.status == 200:
                             return await response.json()
                         else:
-                            raise Exception(f"Request failed with status {response.status}")
+                            raise Exception(f"Request failed with status {response.status} - {response}")
 
     def get_user(self, user_id) -> User:
         path = f'{self.__url}{self._org_id}/users/{user_id}'
