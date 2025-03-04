@@ -33,7 +33,6 @@ def arg_parser() -> ArgumentParser:
         Скрипт сохраняет размеры дисков пользователей в файл disk_info.csv
         Параметры:
         --users <file.csv> - файл со списком пользователей.
-        
         """),
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -58,7 +57,7 @@ def read_users_csv(file_path: str) -> List[Dict]:
 
 def disk_info(users: List[Dict]):
     with open('disk_info.csv', 'w', newline='', encoding='utf-8') as f:
-        w = csv.DictWriter(f, ['ID' , 'Email', 'Size MB'])
+        w = csv.DictWriter(f, ['ID' , 'Email', 'Fname', 'Lname', 'Size MB'])
         w.writeheader()
         for user in users:
             user_email = user.get('Email')
@@ -68,10 +67,12 @@ def disk_info(users: List[Dict]):
                 client: yadisk.Client = yadisk.Client(token=token, session="httpx")
                 user_disk_info = client.get_disk_info()
                 print()
-                used_space = round(user_disk_info.used_space / 1024 / 1024, 0)
+                used_space = round(user_disk_info.used_space / 1024 / 1024)
                 w.writerow({
                         'ID': user.get('ID'),
                         'Email': user_email,
+                        'Fname': user.get('Fname'),
+                        'Lname': user.get('Lname'),
                         'Size MB': used_space
                         })
                 log.info(f'{user_email} - {used_space} МБ')

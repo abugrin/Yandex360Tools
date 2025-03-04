@@ -1,15 +1,30 @@
+from argparse import ArgumentParser
+import argparse
 import csv
 import logging
-import os
+from textwrap import dedent
 from time import time
+from typing import Dict, List
 from tqdm import tqdm
 
 from dotenv import load_dotenv
-from lib.api360 import API360
 from lib.disk360 import DiskClient, PublicResourcesList
 from tools import get_service_app_token, logger
 
 log: logging.Logger = logger(logger_name = 'DISK', file_name = 'disk_report.log', log_level = logging.INFO, no_console=True)
+
+def arg_parser() -> ArgumentParser:
+    parser = ArgumentParser(
+        description=dedent("""
+        Скрипт выгружает данные о ресурсах на диске, которыми поделился пользователь в файл disk_report.csv
+        Параметры:
+        --users <file.csv> - файл со списком пользователей.
+        
+        """),
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('--users', type=str, required=True, help='CSV файл со списком пользователей')
+    return parser
 
 def get_user_shared_resources(email: str, token: str, client: DiskClient):
 
@@ -77,37 +92,54 @@ def get_user_shared_resources(email: str, token: str, client: DiskClient):
                     })
 
 
-def main():
-    api360 = API360(api_key=os.getenv('TOKEN'), org_id=os.getenv('ORG_ID'), log_level=logging.INFO)
-
+def main(users: List[Dict]):
     client = DiskClient()
     log.info('Загрузка пользователей...')
-    users = api360.get_all_users()
+
     log.info(f'Загрузка пользователей завершена. Загружено {len(users)} пользователей.')
     processed = 0
     with tqdm(total=len(users), unit="User") as progress:
         for user in users:
-            if user.uid[:3] == '113':
-                log.info(f'Обработка ресурсов пользователя: {user.email}')
+            if user.get('ID')[:3] == '113':
+                user_email = user.get('Email')
+                log.info(f'Обработка ресурсов пользователя: {user_email}')
                 try:
-                    token = get_service_app_token(user.email)
-                    get_user_shared_resources(user.email, token, client)
+                    token = get_service_app_token(user_email)
+                    get_user_shared_resources(user_email, token, client)
                     processed += 1
                 
                 except Exception as e:
-                    log.error(f'Ошибка при обработке ресурсов пользователя: {user.email}')
+                    log.error(f'Ошибка при обработке ресурсов пользователя: {user_email}')
                     log.error(e)
                     #raise e
             else:
-                log.warning(f'Пропуск пользователя: {user.email}')
+                log.warning(f'Пропуск пользователя: {user_email}')
             progress.update(1)
     client.close()
     return processed, users
 
 
+def read_users_csv(file_path: str) -> List[Dict]:
+    users:List[Dict] = []
+    try:
+        with open(file_path, 'r', encoding='utf8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                user_id = row.get('ID')
+                if user_id and len(user_id) == 16:
+                    users.append(row)
+        return users
+    except FileNotFoundError:
+        print(f'Файл {file_path} не найден')
+        exit(1)
+
 if __name__ == '__main__':
     load_dotenv()
     print('Запуск...\n')
+    parser = arg_parser()
+    args = parser.parse_args()
+    users = read_users_csv(args.users)
+    
     start_time = time()
 
     with open('disk_report.csv', 'w', newline='', encoding='utf-8') as f:
@@ -120,7 +152,7 @@ if __name__ == '__main__':
                                ])
         w.writeheader()    
 
-    processed, users = main()
+    processed, users = main(users=users)
     
     end_time = time()
     log.info(f'Завершено. Обработано пользователей: {processed} из {len(users)} за {end_time - start_time} секунд.')
